@@ -2,11 +2,19 @@ spring:
   application:
     name: orbit-backend
 
-  datasource:
-    url: jdbc:mysql://localhost:3307/orbitdb
-    username: root
-    password: Chandan@306
+  spring:
+  application:
+    name: orbit-backend
 
+  datasource:
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
   jpa:
     hibernate:
       ddl-auto: update
