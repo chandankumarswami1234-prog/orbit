@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: orbit-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3307/orbitdb
+    username: root
+    password: Chandan@306
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
