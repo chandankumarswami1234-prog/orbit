@@ -25,7 +25,7 @@ function Projects() {
     );
 
     if (!response.ok) {
-      alert("Error: " + response.status);
+    toast.error("Error: " + response.status);
       return;
     }
 
@@ -86,7 +86,7 @@ function Projects() {
         fetchProjects();
       } else {
         const text = await response.text();
-        alert("Error " + response.status + "\n" + text);
+        toast.error("Error " + response.status + "\n" + text);
       }
     } catch (error) {
       console.error(error);
