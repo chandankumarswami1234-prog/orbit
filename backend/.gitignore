@@ -1,6 +1,12 @@
-# Java
-backend/target/
+# Java / Maven
+**/target/
 *.class
+
+# Spring Boot logs
+*.log
+
+# Environment
+.env
 
 # Node
 frontend/node_modules/
@@ -13,9 +19,3 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Environment
-.env
