@@ -2,7 +2,7 @@
 **/target/
 *.class
 
-# Spring Boot logs
+# Logs
 *.log
 
 # Environment
