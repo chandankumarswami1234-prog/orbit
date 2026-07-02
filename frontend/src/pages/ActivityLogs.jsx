@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 import API from "../services/api";
 import { toast } from "react-toastify";
 
@@ -27,11 +29,7 @@ function ActivityLogs() {
   }, []);
 
   const deleteLog = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this activity log?"
-    );
-
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete this activity log?")) return;
 
     try {
       await API.delete(`/activity/${id}`);
@@ -52,101 +50,73 @@ function ActivityLogs() {
   );
 
   return (
-    <div
-      style={{
-        padding: "25px",
-        maxWidth: "1100px",
-        margin: "auto",
-      }}
-    >
-      <h1>Activity Logs</h1>
+    <>
+      <Navbar />
 
-      <br />
+      <div className="container">
+        <Sidebar />
 
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          marginBottom: "20px",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Search Activity..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            flex: 1,
-            padding: "10px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-          }}
-        />
+        <div className="content">
 
-        <button
-          onClick={fetchLogs}
-          style={{
-            padding: "10px 20px",
-            cursor: "pointer",
-          }}
-        >
-          Refresh
-        </button>
-      </div>
+          <h1>Activity Logs</h1>
 
-      <hr />
+          <br />
 
-      {loading ? (
-        <h3>Loading Activity Logs...</h3>
-      ) : filteredLogs.length === 0 ? (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "40px",
-            color: "gray",
-          }}
-        >
-          <h3>No Activity Logs Found</h3>
-        </div>
-      ) : (
-        filteredLogs.map((log) => (
           <div
-            key={log.id}
             style={{
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-              padding: "20px",
+              display: "flex",
+              gap: "10px",
               marginBottom: "20px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              background: "#fff",
             }}
           >
-            <h3>{log.action}</h3>
-
-            <p>
-              <b>Timestamp:</b>{" "}
-              {log.timestamp
-                ? new Date(log.timestamp).toLocaleString()
-                : "N/A"}
-            </p>
-
-            <button
-              onClick={() => deleteLog(log.id)}
+            <input
+              type="text"
+              placeholder="Search Activity..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               style={{
-                backgroundColor: "#dc3545",
-                color: "white",
-                border: "none",
-                padding: "10px 18px",
-                borderRadius: "6px",
-                cursor: "pointer",
+                flex: 1,
+                padding: "10px",
               }}
-            >
-              Delete
+            />
+
+            <button onClick={fetchLogs}>
+              Refresh
             </button>
           </div>
-        ))
-      )}
-    </div>
+
+          {loading ? (
+            <h3>Loading Activity Logs...</h3>
+          ) : filteredLogs.length === 0 ? (
+            <h3>No Activity Logs Found</h3>
+          ) : (
+            filteredLogs.map((log) => (
+              <div
+                key={log.id}
+                className="card"
+                style={{ marginBottom: "20px" }}
+              >
+                <h3>{log.action}</h3>
+
+                <p>
+                  <strong>Timestamp:</strong>{" "}
+                  {log.timestamp
+                    ? new Date(log.timestamp).toLocaleString()
+                    : "N/A"}
+                </p>
+
+                <button
+                  onClick={() => deleteLog(log.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            ))
+          )}
+
+        </div>
+      </div>
+    </>
   );
 }
 

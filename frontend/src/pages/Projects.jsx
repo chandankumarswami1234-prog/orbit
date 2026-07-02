@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import { toast } from "react-toastify";
+import API from "../services/api";
 
 function Projects() {
   const [projects, setProjects] = useState([]);
@@ -11,26 +12,10 @@ function Projects() {
     fetchProjects();
   }, []);
 
- const fetchProjects = async () => {
-  const token = localStorage.getItem("token");
-
+const fetchProjects = async () => {
   try {
-    const response = await fetch(
-      "http://localhost:8080/project/all",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-    toast.error("Error: " + response.status);
-      return;
-    }
-
-    const data = await response.json();
-    setProjects(data);
+    const response = await API.get("/project/all");
+    setProjects(response.data);
   } catch (error) {
     console.error(error);
     toast.error("Cannot connect to backend");
@@ -38,62 +23,43 @@ function Projects() {
 };
 
   const createProject = async () => {
-    const token = localStorage.getItem("token");
+  try {
+    const response = await API.post("/project/create", {
+      name: projectName,
+      description: "",
+    });
 
-    try {
-      const response = await fetch("http://localhost:8080/project/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: projectName,
-          description: "",
-        }),
-      });
+    toast.success(response.data);
 
-      console.log("Status:", response.status);
+    setProjectName("");
 
-      const text = await response.text();
-      console.log(text);
+    fetchProjects();
 
-      if (response.ok) {
-       toast.success(text);
-        setProjectName("");
-        fetchProjects();
-      } else {
-       toast.error("Error " + response.status + "\n" + text);
-      }
-    } catch (error) {
-      console.error(error);
-    toast.error ("Failed to connect to backend");
-    }
-  };
+  } catch (error) {
+    console.error(error);
 
-  const deleteProject = async (id) => {
-    const token = localStorage.getItem("token");
+    toast.error(
+      error.response?.data || "Failed to create project"
+    );
+  }
+};
 
-    try {
-      const response = await fetch(`http://localhost:8080/project/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+ const deleteProject = async (id) => {
+  try {
+    await API.delete(`/project/${id}`);
 
-      if (response.ok) {
-        fetchProjects();
-      } else {
-        const text = await response.text();
-        toast.error("Error " + response.status + "\n" + text);
-      }
-    } catch (error) {
-      console.error(error);
-     toast.error("Failed to connect to backend");
-    }
-  };
+    toast.success("Project Deleted");
 
+    fetchProjects();
+
+  } catch (error) {
+    console.error(error);
+
+    toast.error(
+      error.response?.data || "Delete Failed"
+    );
+  }
+};
   return (
     <>
       <Navbar />

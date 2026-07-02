@@ -1,19 +1,27 @@
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 import API from "../services/api";
 import { toast } from "react-toastify";
 
 function Files() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  // Fetch all uploaded files
   const fetchFiles = async () => {
     try {
+      setLoading(true);
+
       const response = await API.get("/file/all");
+
       setFiles(response.data);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load files");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -21,7 +29,6 @@ function Files() {
     fetchFiles();
   }, []);
 
-  // Upload file
   const uploadFile = async () => {
     if (!selectedFile) {
       toast.warning("Please choose a file");
@@ -55,8 +62,13 @@ function Files() {
     }
   };
 
-  // Delete file
   const deleteFile = async (id) => {
+    const confirmDelete = window.confirm(
+      "Delete this file?"
+    );
+
+    if (!confirmDelete) return;
+
     try {
       const response = await API.delete(`/file/${id}`);
 
@@ -69,66 +81,138 @@ function Files() {
     }
   };
 
+  const filteredFiles = files.filter((file) =>
+    (file.fileName || "")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>File Manager</h1>
+    <>
+      <Navbar />
 
-      <input
-        id="fileInput"
-        type="file"
-        onChange={(e) => setSelectedFile(e.target.files[0])}
-      />
+      <div className="container">
+        <Sidebar />
 
-      <br />
-      <br />
+        <div className="content">
 
-      <button onClick={uploadFile}>
-        Upload File
-      </button>
+          <h1>File Manager</h1>
 
-      <hr />
+          <div className="card">
 
-      <h2>Uploaded Files</h2>
+            <input
+              id="fileInput"
+              type="file"
+              onChange={(e) =>
+                setSelectedFile(e.target.files[0])
+              }
+            />
 
-      {files.length === 0 ? (
-        <p>No Files Uploaded</p>
-      ) : (
-        files.map((file) => (
+            <br />
+            <br />
+
+            <button onClick={uploadFile}>
+              Upload File
+            </button>
+
+          </div>
+
+          <br />
+
           <div
-            key={file.id}
             style={{
-              border: "1px solid #ccc",
-              padding: "15px",
-              marginBottom: "10px",
-              borderRadius: "8px",
+              display: "flex",
+              gap: "10px",
+              marginBottom: "20px",
             }}
           >
-            <h3>{file.fileName}</h3>
+            <input
+              type="text"
+              placeholder="Search Files..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              style={{
+                flex: 1,
+                padding: "10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+            />
 
-            <p>
-              Size:{" "}
-              {(file.fileSize / 1024).toFixed(2)} KB
-            </p>
-
-            <a
-              href={`http://localhost:8080/file/download/${file.id}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Download
-            </a>
-
-            {"   "}
-
-            <button
-              onClick={() => deleteFile(file.id)}
-            >
-              Delete
+            <button onClick={fetchFiles}>
+              Refresh
             </button>
           </div>
-        ))
-      )}
-    </div>
+
+          <hr />
+
+          {loading ? (
+            <h3>Loading Files...</h3>
+          ) : filteredFiles.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                color: "gray",
+                padding: "30px",
+              }}
+            >
+              <h3>No Files Uploaded</h3>
+            </div>
+          ) : (
+            filteredFiles.map((file) => (
+              <div
+                key={file.id}
+                className="card"
+                style={{
+                  marginBottom: "15px",
+                }}
+              >
+                <h3>{file.fileName}</h3>
+
+                <p>
+                  <strong>Size:</strong>{" "}
+                  {(file.fileSize / 1024).toFixed(2)}
+                  {" "}KB
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    marginTop: "10px",
+                  }}
+                >
+                  <a
+                    href={`${API.defaults.baseURL}/file/download/${file.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <button>
+                      Download
+                    </button>
+                  </a>
+
+                  <button
+                    style={{
+                      backgroundColor: "#dc3545",
+                      color: "white",
+                    }}
+                    onClick={() =>
+                      deleteFile(file.id)
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+
+        </div>
+      </div>
+    </>
   );
 }
 

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 import API from "../services/api";
 import { toast } from "react-toastify";
 
@@ -9,12 +11,14 @@ function Notifications() {
   const [message, setMessage] = useState("");
 
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   const fetchNotifications = async () => {
     try {
       setLoading(true);
 
       const response = await API.get("/notification/all");
+
       setNotifications(response.data);
     } catch (error) {
       console.error(error);
@@ -34,21 +38,27 @@ function Notifications() {
   };
 
   const createNotification = async () => {
-    if (!title.trim() || !message.trim()) {
-      toast.warning("Fill all fields");
+    if (!title.trim()) {
+      toast.warning("Enter notification title");
+      return;
+    }
+
+    if (!message.trim()) {
+      toast.warning("Enter notification message");
       return;
     }
 
     try {
-      await API.post("/notification/create", {
+      const response = await API.post("/notification/create", {
         title,
         message,
       });
 
-      clearForm();
-      fetchNotifications();
+      toast.success(response.data);
 
-      toast.success("Notification Created Successfully");
+      clearForm();
+
+      fetchNotifications();
     } catch (error) {
       console.error(error);
       toast.error("Failed to create notification");
@@ -57,171 +67,182 @@ function Notifications() {
 
   const markAsRead = async (id) => {
     try {
-      await API.put(`/notification/read/${id}`);
+      const response = await API.put(`/notification/read/${id}`);
+
+      toast.success(response.data);
 
       fetchNotifications();
-
-      toast.success("Notification marked as read");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update notification");
+      toast.error("Failed to mark notification");
     }
   };
 
   const deleteNotification = async (id) => {
-    if (!window.confirm("Delete this notification?")) {
-      return;
-    }
+    if (!window.confirm("Delete this notification?")) return;
 
     try {
-      await API.delete(`/notification/${id}`);
+      const response = await API.delete(`/notification/${id}`);
+
+      toast.success(response.data);
 
       fetchNotifications();
-
-      toast.success("Notification Deleted Successfully");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete notification");
+      toast.error("Delete failed");
     }
   };
 
+  const filteredNotifications = notifications.filter((notification) =>
+    (
+      notification.title +
+      " " +
+      notification.message
+    )
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Notifications</h1>
+    <>
+      <Navbar />
 
-      <button
-        onClick={fetchNotifications}
-        style={{
-          marginBottom: "20px",
-          padding: "8px 15px",
-          cursor: "pointer",
-        }}
-      >
-        Refresh
-      </button>
+      <div className="container">
+        <Sidebar />
 
-      <br />
+        <div className="content">
 
-      <input
-        type="text"
-        placeholder="Notification Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        style={{
-          width: "300px",
-          padding: "8px",
-        }}
-      />
+          <h1>Notifications</h1>
 
-      <br />
-      <br />
+          <div className="card">
 
-      <textarea
-        placeholder="Notification Message"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        rows="4"
-        cols="45"
-        style={{
-          padding: "8px",
-        }}
-      />
+            <h2>Create Notification</h2>
 
-      <br />
-      <br />
+            <input
+              type="text"
+              placeholder="Notification Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "15px",
+              }}
+            />
 
-      <button
-        onClick={createNotification}
-        style={{
-          background: "#198754",
-          color: "white",
-          border: "none",
-          padding: "10px 20px",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        Create Notification
-      </button>
+            <textarea
+              placeholder="Notification Message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows="5"
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "15px",
+              }}
+            />
 
-      <hr />
+            <button onClick={createNotification}>
+              Create Notification
+            </button>
 
-      <h2>All Notifications</h2>
+          </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : notifications.length === 0 ? (
-        <p>No Notifications Found.</p>
-      ) : (
-        notifications.map((notification) => (
+          <br />
+
           <div
-            key={notification.id}
             style={{
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              padding: "15px",
-              marginBottom: "15px",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+              display: "flex",
+              gap: "10px",
+              marginBottom: "20px",
             }}
           >
-            <h3>{notification.title}</h3>
-
-            <p>{notification.message}</p>
-
-            <p>
-              <strong>Status:</strong>{" "}
-              <span
-                style={{
-                  color: notification.readStatus
-                    ? "green"
-                    : "red",
-                  fontWeight: "bold",
-                }}
-              >
-                {notification.readStatus
-                  ? "Read"
-                  : "Unread"}
-              </span>
-            </p>
-
-            {!notification.readStatus && (
-              <button
-                onClick={() =>
-                  markAsRead(notification.id)
-                }
-                style={{
-                  background: "#0d6efd",
-                  color: "white",
-                  border: "none",
-                  padding: "8px 15px",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-              >
-                Mark as Read
-              </button>
-            )}
-
-            <button
-              onClick={() =>
-                deleteNotification(notification.id)
-              }
+            <input
+              type="text"
+              placeholder="Search Notifications..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               style={{
-                marginLeft: "10px",
-                background: "#dc3545",
-                color: "white",
-                border: "none",
-                padding: "8px 15px",
-                borderRadius: "5px",
-                cursor: "pointer",
+                flex: 1,
+                padding: "10px",
               }}
-            >
-              Delete
+            />
+
+            <button onClick={fetchNotifications}>
+              Refresh
             </button>
           </div>
-        ))
-      )}
-    </div>
+
+          {loading ? (
+            <h2>Loading Notifications...</h2>
+          ) : filteredNotifications.length === 0 ? (
+            <div className="card">
+              <h3>No Notifications Found</h3>
+            </div>
+          ) : (
+            filteredNotifications.map((notification) => (
+              <div
+                key={notification.id}
+                className="card"
+                style={{ marginBottom: "20px" }}
+              >
+                <h3>{notification.title}</h3>
+
+                <p>{notification.message}</p>
+
+                <p>
+                  <strong>Status : </strong>
+
+                  <span
+                    style={{
+                      color: notification.readStatus
+                        ? "green"
+                        : "red",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {notification.readStatus
+                      ? "Read"
+                      : "Unread"}
+                  </span>
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    marginTop: "15px",
+                  }}
+                >
+                  {!notification.readStatus && (
+                    <button
+                      onClick={() =>
+                        markAsRead(notification.id)
+                      }
+                    >
+                      Mark as Read
+                    </button>
+                  )}
+
+                  <button
+                    style={{
+                      background: "#dc3545",
+                      color: "white",
+                    }}
+                    onClick={() =>
+                      deleteNotification(notification.id)
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+
+        </div>
+      </div>
+    </>
   );
 }
 

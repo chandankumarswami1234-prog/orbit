@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 import API from "../services/api";
 import { toast } from "react-toastify";
 
@@ -10,13 +12,25 @@ function Profile() {
 
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
+
+  const [lastUpdated, setLastUpdated] = useState("");
 
   const fetchProfile = async () => {
     try {
+      setLoading(true);
+
       const response = await API.get("/auth/profile");
 
       setName(response.data.name || "");
       setEmail(response.data.email || "");
+
+      setLastUpdated(new Date().toLocaleString());
     } catch (error) {
       console.error(error);
       toast.error("Failed to load profile");
@@ -61,26 +75,37 @@ function Profile() {
   };
 
   const changePassword = async () => {
-    if (!oldPassword || !newPassword) {
-      toast.warning("Fill all password fields");
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      toast.warning("Please fill all password fields");
       return;
     }
 
     if (newPassword.length < 8) {
-      toast.warning("Password must be at least 8 characters");
+      toast.warning(
+        "Password must be at least 8 characters"
+      );
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.warning("Passwords do not match");
       return;
     }
 
     try {
-      const response = await API.put("/auth/change-password", {
-        oldPassword,
-        newPassword,
-      });
+      const response = await API.put(
+        "/auth/change-password",
+        {
+          oldPassword,
+          newPassword,
+        }
+      );
 
       toast.success(response.data);
 
       setOldPassword("");
       setNewPassword("");
+      setConfirmPassword("");
     } catch (error) {
       console.error(error);
 
@@ -94,125 +119,360 @@ function Profile() {
 
   if (loading) {
     return (
-      <div style={{ padding: "30px" }}>
-        <h2>Loading Profile...</h2>
-      </div>
+      <>
+        <Navbar />
+
+        <div className="container">
+          <Sidebar />
+
+          <div className="content">
+            <h2>Loading Profile...</h2>
+          </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div style={{ padding: "30px" }}>
-      <h1>User Profile</h1>
+    <>
+      <Navbar />
 
-      <div
-        style={{
-          border: "1px solid #ddd",
-          padding: "25px",
-          borderRadius: "10px",
-          maxWidth: "600px",
-          marginTop: "20px",
-        }}
-      >
-        <h2>Profile Information</h2>
+      <div className="container">
+        <Sidebar />
 
-        <br />
+        <div className="content">
 
-        <label>Name</label>
+          <h1>User Profile</h1>
 
-        <br />
+          <div className="card">
 
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-          }}
-        />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "20px",
+                marginBottom: "20px",
+              }}
+            >
+              <div
+                style={{
+                  width: "90px",
+                  height: "90px",
+                  borderRadius: "50%",
+                  background: "#0d6efd",
+                  color: "white",
+                  fontSize: "34px",
+                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {name
+                  ? name.charAt(0).toUpperCase()
+                  : "U"}
+              </div>
 
-        <br />
-        <br />
+              <div>
+                <h2>{name || "User"}</h2>
 
-        <label>Email</label>
+                <p>{email}</p>
 
-        <br />
+                <small>
+                  Last Updated : {lastUpdated}
+                </small>
+              </div>
+            </div>
 
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-          }}
-        />
+            <hr />
 
-        <br />
-        <br />
+            <h2>Profile Information</h2>
 
-        <button onClick={updateProfile}>
-          Update Profile
-        </button>
+            <br />
+
+            <label>Name</label>
+
+            <br />
+
+            <input
+              type="text"
+              value={name}
+              onChange={(e) =>
+                setName(e.target.value)
+              }
+              style={{
+                width: "100%",
+                padding: "10px",
+              }}
+            />
+
+            <br />
+            <br />
+
+            <label>Email</label>
+
+            <br />
+
+            <input
+              type="email"
+              value={email}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+              style={{
+                width: "100%",
+                padding: "10px",
+              }}
+            />
+
+            <br />
+            <br />
+
+            <button onClick={updateProfile}>
+              Update Profile
+            </button>
+
+            <button
+              style={{
+                marginLeft: "10px",
+              }}
+              onClick={fetchProfile}
+            >
+              Refresh
+            </button>
+
+          </div>
+
+          <br />
+
+          <div className="card">
+
+            <h2>Change Password</h2>
+
+            <br />
+
+                        <label>Current Password</label>
+
+            <br />
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginBottom: "20px",
+              }}
+            >
+              <input
+                type={
+                  showOldPassword
+                    ? "text"
+                    : "password"
+                }
+                value={oldPassword}
+                onChange={(e) =>
+                  setOldPassword(e.target.value)
+                }
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                }}
+              />
+
+              <button
+                onClick={() =>
+                  setShowOldPassword(
+                    !showOldPassword
+                  )
+                }
+              >
+                {showOldPassword
+                  ? "Hide"
+                  : "Show"}
+              </button>
+            </div>
+
+            <label>New Password</label>
+
+            <br />
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginBottom: "20px",
+              }}
+            >
+              <input
+                type={
+                  showNewPassword
+                    ? "text"
+                    : "password"
+                }
+                value={newPassword}
+                onChange={(e) =>
+                  setNewPassword(e.target.value)
+                }
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                }}
+              />
+
+              <button
+                onClick={() =>
+                  setShowNewPassword(
+                    !showNewPassword
+                  )
+                }
+              >
+                {showNewPassword
+                  ? "Hide"
+                  : "Show"}
+              </button>
+            </div>
+
+            <label>Confirm New Password</label>
+
+            <br />
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginBottom: "20px",
+              }}
+            >
+              <input
+                type={
+                  showConfirmPassword
+                    ? "text"
+                    : "password"
+                }
+                value={confirmPassword}
+                onChange={(e) =>
+                  setConfirmPassword(
+                    e.target.value
+                  )
+                }
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                }}
+              />
+
+              <button
+                onClick={() =>
+                  setShowConfirmPassword(
+                    !showConfirmPassword
+                  )
+                }
+              >
+                {showConfirmPassword
+                  ? "Hide"
+                  : "Show"}
+              </button>
+            </div>
+
+            <button
+              onClick={changePassword}
+            >
+              Change Password
+            </button>
+
+            <button
+              style={{
+                marginLeft: "10px",
+                background: "#dc3545",
+                color: "white",
+              }}
+              onClick={() => {
+                setOldPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+              }}
+            >
+              Clear
+            </button>
+
+          </div>
+
+          <br />
+
+          <div className="card">
+            <h2>Account Information</h2>
+
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <tbody>
+                <tr>
+                  <td
+                    style={{
+                      padding: "10px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Name
+                  </td>
+
+                  <td>{name}</td>
+                </tr>
+
+                <tr>
+                  <td
+                    style={{
+                      padding: "10px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Email
+                  </td>
+
+                  <td>{email}</td>
+                </tr>
+
+                <tr>
+                  <td
+                    style={{
+                      padding: "10px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Status
+                  </td>
+
+                  <td
+                    style={{
+                      color: "green",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Active
+                  </td>
+                </tr>
+
+                <tr>
+                  <td
+                    style={{
+                      padding: "10px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Last Updated
+                  </td>
+
+                  <td>{lastUpdated}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
       </div>
-
-      <br />
-
-      <div
-        style={{
-          border: "1px solid #ddd",
-          padding: "25px",
-          borderRadius: "10px",
-          maxWidth: "600px",
-        }}
-      >
-        <h2>Change Password</h2>
-
-        <br />
-
-        <label>Current Password</label>
-
-        <br />
-
-        <input
-          type="password"
-          value={oldPassword}
-          onChange={(e) =>
-            setOldPassword(e.target.value)
-          }
-          style={{
-            width: "100%",
-            padding: "10px",
-          }}
-        />
-
-        <br />
-        <br />
-
-        <label>New Password</label>
-
-        <br />
-
-        <input
-          type="password"
-          value={newPassword}
-          onChange={(e) =>
-            setNewPassword(e.target.value)
-          }
-          style={{
-            width: "100%",
-            padding: "10px",
-          }}
-        />
-
-        <br />
-        <br />
-
-        <button onClick={changePassword}>
-          Change Password
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 
