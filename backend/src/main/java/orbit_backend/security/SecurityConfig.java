@@ -21,28 +21,29 @@ public class SecurityConfig {
     private JwtFilter jwtFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
+
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
 
-                        // Public APIs
-                       .requestMatchers(
-    "/",
-    "/actuator/**",
-    "/auth/login",
-    "/auth/register"
-).permitAll()
+                        // Public endpoints
+                        .requestMatchers(
+                                "/",
+                                "/error",
+                                "/actuator/**",
+                                "/auth/login",
+                                "/auth/register"
+                        ).permitAll()
 
-
-                        // Everything else requires JWT
-                        .anyRequest()
-                        .authenticated())
+                        // Secure everything else
+                        .anyRequest().authenticated())
 
                 .addFilterBefore(
                         jwtFilter,
@@ -56,21 +57,21 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-       configuration.setAllowedOrigins(List.of(
-    "http://localhost:5173",
-    "https://orbit-k654.onrender.com"
-));
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173"
+                // Add your deployed frontend URL here later, for example:
+                // "https://orbit-frontend.onrender.com"
+        ));
 
-        configuration.setAllowedMethods(
-                Arrays.asList(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+        ));
 
-        configuration.setAllowedHeaders(
-                List.of("*"));
+        configuration.setAllowedHeaders(List.of("*"));
 
         configuration.setAllowCredentials(true);
 
