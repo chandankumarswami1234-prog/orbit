@@ -33,8 +33,10 @@ public class SecurityConfig {
 
                         // Public APIs
                        .requestMatchers(
-        "/auth/login",
-        "/auth/register"
+    "/",
+    "/actuator/**",
+    "/auth/login",
+    "/auth/register"
 ).permitAll()
 
 
@@ -54,8 +56,10 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:5173"));
+       configuration.setAllowedOrigins(List.of(
+    "http://localhost:5173",
+    "https://orbit-k654.onrender.com"
+));
 
         configuration.setAllowedMethods(
                 Arrays.asList(
