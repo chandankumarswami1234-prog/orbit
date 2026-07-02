@@ -56,12 +56,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173"
-                // Add your deployed frontend URL here later, for example:
-                // "https://orbit-frontend.onrender.com"
-        ));
+configuration.setAllowedOriginPatterns(List.of("*"));
 
         configuration.setAllowedMethods(Arrays.asList(
                 "GET",
