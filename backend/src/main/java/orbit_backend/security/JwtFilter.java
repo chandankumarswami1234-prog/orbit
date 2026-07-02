@@ -41,7 +41,10 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // Public endpoints
-   if (path.equals("/auth/login")
+   if (path.equals("/")
+        || path.equals("/error")
+        || path.startsWith("/actuator")
+        || path.equals("/auth/login")
         || path.equals("/auth/register")) {
 
     filterChain.doFilter(request, response);
